@@ -6,6 +6,7 @@ import com.example.travel.mcp.dto.SearchHotelsResponse;
 import com.example.travel.mcp.dto.WeatherResult;
 import com.example.travel.mcp.service.TravelMcpServices;
 import com.example.travel.mcp.service.McpToolGovernance;
+import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,7 @@ public class TravelMcpTools {
             @McpToolParam(description = "Number of adults", required = false) Integer adults,
             @McpToolParam(description = "Number of children", required = false) Integer children,
             @McpToolParam(description = "Maximum price per night in configured currency", required = false) BigDecimal maxPricePerNight) {
-        governance.check("search_hotels");
+        governance.check("search_hotels", "mcp-client", "USER", null, false);
         long started = System.nanoTime();
         LocalDate checkIn = parse(checkInDate, LocalDate.now().plusDays(1));
         LocalDate checkOut = parse(checkOutDate, checkIn.plusDays(1));
@@ -65,7 +66,7 @@ public class TravelMcpTools {
             @McpToolParam(description = "Prefer local experiences", required = false) Boolean localExperience,
             @McpToolParam(description = "Prefer family-friendly activities", required = false) Boolean familyFriendly,
             @McpToolParam(description = "Budget label such as low, medium or high", required = false) String budgetLabel) {
-        governance.check("generate_itinerary");
+        governance.check("generate_itinerary", "mcp-client", "USER", null, false);
         long started = System.nanoTime();
         LocalDate start = parse(startDate, LocalDate.now());
         LocalDate end = parse(endDate, start.plusDays(Math.max(1, days == null ? 1 : days)));
@@ -89,7 +90,7 @@ public class TravelMcpTools {
             @McpToolParam(description = "Destination city or country", required = true) String destination,
             @McpToolParam(description = "Start date yyyy-MM-dd", required = false) String startDate,
             @McpToolParam(description = "End date yyyy-MM-dd", required = false) String endDate) {
-        governance.check("get_weather");
+        governance.check("get_weather", "mcp-client", "USER", null, false);
         long started = System.nanoTime();
         LocalDate start = parse(startDate, LocalDate.now());
         LocalDate end = parse(endDate, start.plusDays(5));
@@ -103,7 +104,7 @@ public class TravelMcpTools {
     @McpTool(name = "resolve_airport", description = "Resolve a city or airport code to a three-letter IATA airport code.")
     public AirportResult resolveAirport(
             @McpToolParam(description = "City, country, or airport code", required = true) String cityOrCode) {
-        governance.check("resolve_airport");
+        governance.check("resolve_airport", "mcp-client", "USER", null, false);
         long started = System.nanoTime();
         log.info("mcp.tool.request name=resolve_airport query={}", cityOrCode);
         log.info("mcp.tool.start name=resolve_airport query={}", cityOrCode);
@@ -117,7 +118,7 @@ public class TravelMcpTools {
     @McpTool(name = "search_travel_research", description = "Search live destination, attraction, food, and local travel information.")
     public ResearchResult searchTravelResearch(
             @McpToolParam(description = "Concrete non-empty travel research query", required = true) String query) {
-        governance.check("search_travel_research");
+        governance.check("search_travel_research", "mcp-client", "USER", null, false);
         long started = System.nanoTime();
         log.info("mcp.tool.request name=search_travel_research query={}", query);
         log.info("mcp.tool.start name=search_travel_research queryLength={}", query == null ? 0 : query.length());
