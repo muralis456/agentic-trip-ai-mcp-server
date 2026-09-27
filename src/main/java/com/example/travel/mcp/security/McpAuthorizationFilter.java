@@ -10,6 +10,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Transport-level authentication for the MCP HTTP endpoint.
+ *
+ * <p>The API key authenticates the calling MCP client. Tool-level authorization
+ * is still enforced independently by {@code McpToolGovernance}.</p>
+ */
 @Component
 public class McpAuthorizationFilter extends OncePerRequestFilter {
 
@@ -20,7 +26,7 @@ public class McpAuthorizationFilter extends OncePerRequestFilter {
             @Value("${travel.mcp.security.enabled:false}") boolean enabled,
             @Value("${travel.mcp.security.api-key:}") String expectedKey) {
         this.enabled = enabled;
-        this.expectedKey = expectedKey;
+        this.expectedKey = expectedKey == null ? "" : expectedKey.trim();
     }
 
     @Override
@@ -30,11 +36,13 @@ public class McpAuthorizationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         String supplied = request.getHeader("X-MCP-API-KEY");
-        if (expectedKey.isBlank() || !expectedKey.equals(supplied)) {
+        if (expectedKey.isBlank() || supplied == null || !expectedKey.equals(supplied.trim())) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "MCP authorization failed.");
             return;
         }
+
         filterChain.doFilter(request, response);
     }
 }

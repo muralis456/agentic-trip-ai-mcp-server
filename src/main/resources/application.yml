@@ -40,6 +40,15 @@ travel:
     forecast-url: ${OPENWEATHER_FORECAST_URL:https://api.openweathermap.org/data/2.5/forecast}
   mcp:
     allowed-tools: ${MCP_ALLOWED_TOOLS:search_flights,search_hotels,get_weather,resolve_airport,search_travel_research,generate_itinerary}
+    governance:
+      enabled: ${MCP_GOVERNANCE_ENABLED:true}
+      max-argument-bytes: ${MCP_MAX_ARGUMENT_BYTES:16384}
+      allowed-users: ${MCP_GOVERNANCE_ALLOWED_USERS:}
+      tools: ${MCP_GOVERNANCE_TOOLS:search_flights:READ_ONLY,search_hotels:READ_ONLY,get_weather:READ_ONLY,resolve_airport:READ_ONLY,search_travel_research:READ_ONLY,generate_itinerary:READ_ONLY}
+      approval-tools: ${MCP_GOVERNANCE_APPROVAL_TOOLS:}
+      roles: ${MCP_GOVERNANCE_ROLES:USER:READ_ONLY;ADMIN:READ_ONLY,SIDE_EFFECTING}
+      circuit-failure-threshold: ${MCP_GOVERNANCE_CIRCUIT_FAILURE_THRESHOLD:3}
+      circuit-open-ms: ${MCP_GOVERNANCE_CIRCUIT_OPEN_MS:30000}
     security:
       enabled: ${MCP_SECURITY_ENABLED:false}
       api-key: ${MCP_API_KEY:}
