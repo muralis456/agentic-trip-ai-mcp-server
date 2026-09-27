@@ -4,6 +4,7 @@ import com.example.travel.mcp.dto.SearchFlightsRequest;
 import com.example.travel.mcp.dto.SearchFlightsResponse;
 import com.example.travel.mcp.service.FlightService;
 import com.example.travel.mcp.service.McpToolGovernance;
+import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class FlightMcpTools {
             @McpToolParam(description = "Departure date in yyyy-MM-dd format", required = false) String departureDate,
             @McpToolParam(description = "Return date in yyyy-MM-dd format, for trip context", required = false) String returnDate,
             @McpToolParam(description = "Number of passengers, from 1 to 9", required = false) Integer passengers) {
-        governance.check("search_flights");
+        governance.check("search_flights", "mcp-client", "USER", null, false);
         long started = System.nanoTime();
         log.info("mcp.tool.request name=search_flights origin={} destination={} departureDate={} returnDate={} passengers={}",
             origin, destination, departureDate, returnDate, passengers);
