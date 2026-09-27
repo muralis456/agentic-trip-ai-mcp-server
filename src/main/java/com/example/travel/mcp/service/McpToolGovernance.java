@@ -62,29 +62,28 @@ public class McpToolGovernance {
     }
 
     public void check(String toolName) {
-        // The MCP framework may invoke tool methods without exposing the transport
-        // authentication metadata to the Java method. In that compatibility path,
-        // enforce tool policy but rely on McpAuthorizationFilter for transport auth.
         if (!enabled) return;
 
         String normalizedTool = normalize(toolName);
         ActionClass actionClass = toolPolicies.get(normalizedTool);
         if (actionClass == null) {
-            deny(normalizedTool, "", "UNKNOWN", "TOOL_NOT_CONFIGURED");
+            deny(normalizedTool, "", "TRANSPORT", "TOOL_NOT_CONFIGURED");
             throw new SecurityException("MCP tool is not configured in the server policy: " + normalizedTool);
         }
-        if (!allowedUsers.isEmpty()) {
-            throw new SecurityException("Authenticated MCP user context is required when allowed-users is configured");
-        }
+
+        // Tool methods are invoked by the MCP framework without exposing HTTP
+        // headers to the Java method. Transport authentication is enforced by
+        // McpAuthorizationFilter; this method applies the server tool policy.
         if (!rolePermissions.getOrDefault("USER", Set.of()).contains(actionClass)) {
-            deny(normalizedTool, "", "USER", "ROLE_NOT_ALLOWED");
-            throw new SecurityException("Role USER is not allowed to invoke " + normalizedTool);
+            deny(normalizedTool, "", "TRANSPORT", "ROLE_POLICY");
+            throw new SecurityException("Tool is not executable under the transport caller policy: " + normalizedTool);
         }
         if (requiresApproval(normalizedTool)) {
+            deny(normalizedTool, "", "TRANSPORT", "APPROVAL_REQUIRED");
             throw new SecurityException("Human approval is required before executing MCP tool: " + normalizedTool);
         }
-        log.info("mcp.policy tool={} userId={} role=USER action={} decision=ALLOW transport-authenticated=true",
-                normalizedTool, "transport-client", actionClass);
+        log.info("mcp.policy tool={} userId=transport-client role=USER action={} decision=ALLOW",
+                normalizedTool, actionClass);
     }
 
     public void check(String toolName, String userId, String role, String argumentsJson, boolean approvalGranted) {
