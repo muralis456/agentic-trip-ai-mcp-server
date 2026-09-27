@@ -1,0 +1,78 @@
+server:
+  port: ${MCP_SERVER_PORT:8090}
+
+spring:
+  application:
+    name: agentic-trip-ai-mcp-server
+  ai:
+    mcp:
+      server:
+        name: agentic-trip-ai-mcp-server
+        version: 0.0.1
+        protocol: STREAMABLE
+        type: SYNC
+        streamable-http:
+          mcp-endpoint: /mcp
+
+travel:
+  aviation:
+    enabled: ${AVIATIONSTACK_ENABLED:true}
+    api-url: ${AVIATIONSTACK_API_URL:https://api.aviationstack.com/v1}
+    api-key: ${AVIATIONSTACK_API_KEY:}
+    include-flight-date: ${AVIATIONSTACK_INCLUDE_FLIGHT_DATE:false}
+    connect-timeout: ${AVIATIONSTACK_CONNECT_TIMEOUT:5s}
+    read-timeout: ${AVIATIONSTACK_READ_TIMEOUT:15s}
+  ignav:
+    enabled: ${IGNAV_ENABLED:true}
+    api-url: ${IGNAV_API_URL:https://ignav.com/api}
+    api-key: ${IGNAV_API_KEY:}
+    market: ${IGNAV_MARKET:IN}
+    connect-timeout: ${IGNAV_CONNECT_TIMEOUT:5s}
+    read-timeout: ${IGNAV_READ_TIMEOUT:15s}
+  tavily:
+    api-url: ${TAVILY_API_URL:https://api.tavily.com/search}
+    api-key: ${TAVILY_API_KEY:}
+  weather:
+    provider: ${WEATHER_PROVIDER:openweather}
+    api-key: ${OPENWEATHER_API_KEY:}
+    geocode-url: ${OPENWEATHER_GEOCODE_URL:https://api.openweathermap.org/geo/1.0/direct}
+    current-url: ${OPENWEATHER_CURRENT_URL:https://api.openweathermap.org/data/2.5/weather}
+    forecast-url: ${OPENWEATHER_FORECAST_URL:https://api.openweathermap.org/data/2.5/forecast}
+  mcp:
+    allowed-tools: ${MCP_ALLOWED_TOOLS:search_flights,search_hotels,get_weather,resolve_airport,search_travel_research,generate_itinerary}
+    security:
+      enabled: ${MCP_SECURITY_ENABLED:false}
+      api-key: ${MCP_API_KEY:}
+    provider:
+      connect-timeout: ${MCP_PROVIDER_CONNECT_TIMEOUT:5s}
+      read-timeout: ${MCP_PROVIDER_READ_TIMEOUT:15s}
+
+  flights:
+    strategy: FALLBACK
+    max-results: ${FLIGHT_MAX_RESULTS:10}
+    circuit-breaker:
+      failure-threshold: ${FLIGHT_CB_FAILURE_THRESHOLD:3}
+      cooldown: ${FLIGHT_CB_COOLDOWN:60s}
+
+  serpapi:
+    enabled: ${SERPAPI_ENABLED:true}
+    api-url: ${SERPAPI_API_URL:https://serpapi.com/search}
+    api-key: ${SERPAPI_API_KEY:}
+    gl: ${SERPAPI_GL:in}
+    hl: ${SERPAPI_HL:en}
+    currency: ${SERPAPI_CURRENCY:INR}
+    max-results: ${SERPAPI_MAX_RESULTS:8}
+    connect-timeout: ${SERPAPI_CONNECT_TIMEOUT:5s}
+    read-timeout: ${SERPAPI_READ_TIMEOUT:15s}
+  jettova:
+    enabled: ${JETTOVA_ENABLED:true}
+    api-url: ${JETTOVA_API_URL:https://www.jettova.com/api/v1}
+    api-key: ${JETTOVA_API_KEY:}
+    connect-timeout: ${JETTOVA_CONNECT_TIMEOUT:5s}
+    read-timeout: ${JETTOVA_READ_TIMEOUT:60s}
+  hotels:
+    strategy: FALLBACK
+    max-results: ${HOTEL_MAX_RESULTS:8}
+    circuit-breaker:
+      failure-threshold: ${HOTEL_CB_FAILURE_THRESHOLD:3}
+      cooldown: ${HOTEL_CB_COOLDOWN:60s}
