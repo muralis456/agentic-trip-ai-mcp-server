@@ -9,6 +9,10 @@ public record SearchFlightsRequest(
         Integer passengers,
         String preferredProvider) {
 
+    public SearchFlightsRequest(String origin, String destination, String departureDate, String returnDate, Integer passengers) {
+        this(origin, destination, departureDate, returnDate, passengers, "");
+    }
+
     public int normalizedPassengers() {
         return passengers == null ? 1 : passengers;
     }
