@@ -123,8 +123,11 @@ public class McpToolGovernance {
             throw new SecurityException("MCP tool arguments exceed the configured server safety limit");
         }
 
+        long now = System.currentTimeMillis();
         Long until = cooldownUntil.get(normalizedTool);
-        if (until != null && until > System.currentTimeMillis()) {
+        boolean distributedOpen = distributedStateStore != null
+                && distributedStateStore.isCircuitOpen(normalizedTool, now);
+        if ((until != null && until > now) || distributedOpen) {
             deny(normalizedTool, normalizedUser, normalizedRole, "CIRCUIT_OPEN");
             throw new IllegalStateException("MCP tool circuit is open: " + normalizedTool);
         }
@@ -166,6 +169,9 @@ public class McpToolGovernance {
         String key = normalize(toolName);
         failures.remove(key);
         cooldownUntil.remove(key);
+        if (distributedStateStore != null) {
+            distributedStateStore.recordSuccess(key);
+        }
     }
 
     public void recordFailure(String toolName) {
@@ -173,8 +179,12 @@ public class McpToolGovernance {
         int count = failures.computeIfAbsent(key, ignored -> new AtomicInteger()).incrementAndGet();
         if (count >= circuitFailureThreshold) {
             cooldownUntil.put(key, System.currentTimeMillis() + circuitOpenMs);
-            log.warn("mcp.policy circuit-open tool={} failures={} openMs={}",
-                    key, count, circuitOpenMs);
+            log.warn("mcp.policy circuit-open tool={} failures={} openMs={} distributed={}",
+                    key, count, circuitOpenMs, distributedStateStore != null);
+        }
+        if (distributedStateStore != null) {
+            distributedStateStore.recordFailure(key, circuitFailureThreshold, circuitOpenMs,
+                    System.currentTimeMillis());
         }
     }
 
