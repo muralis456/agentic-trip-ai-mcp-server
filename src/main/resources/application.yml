@@ -2,16 +2,16 @@ spring:
   application:
     name: agentic-trip-ai-mcp-server
   datasource:
-    url: \${MCP_DB_URL:jdbc:postgresql://localhost:5432/travel_agent}
-    username: \${MCP_DB_USERNAME:travel_app}
-    password: \${MCP_DB_PASSWORD:}
+    url: ${MCP_DB_URL:jdbc:postgresql://localhost:5432/travel_agent}
+    username: ${MCP_DB_USERNAME:travel_app}
+    password: ${MCP_DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: \${MCP_DB_POOL_MAX:8}
-      minimum-idle: \${MCP_DB_POOL_MIN:1}
-      connection-timeout: \${MCP_DB_CONNECTION_TIMEOUT_MS:3000}
+      maximum-pool-size: ${MCP_DB_POOL_MAX:8}
+      minimum-idle: ${MCP_DB_POOL_MIN:1}
+      connection-timeout: ${MCP_DB_CONNECTION_TIMEOUT_MS:3000}
   flyway:
-    enabled: \${MCP_DISTRIBUTED_STATE_ENABLED:false}
+    enabled: ${MCP_DISTRIBUTED_STATE_ENABLED:false}
     baseline-on-migrate: true
   jpa:
     hibernate:
@@ -25,86 +25,86 @@ spring:
         # Stateless MCP: no server-side MCP session state is kept between HTTP requests.
         # Override with MCP_SERVER_PROTOCOL=STREAMABLE only when a stateful MCP session
         # is explicitly required for a legacy integration.
-        protocol: \${MCP_SERVER_PROTOCOL:STATELESS}
+        protocol: ${MCP_SERVER_PROTOCOL:STATELESS}
         type: SYNC
         streamable-http:
           mcp-endpoint: /mcp
 
 server:
-  port: \${MCP_SERVER_PORT:8090}
+  port: ${MCP_SERVER_PORT:8090}
 
 travel:
   aviation:
-    enabled: \${AVIATIONSTACK_ENABLED:true}
-    api-url: \${AVIATIONSTACK_API_URL:https://api.aviationstack.com/v1}
-    api-key: \${AVIATIONSTACK_API_KEY:}
-    include-flight-date: \${AVIATIONSTACK_INCLUDE_FLIGHT_DATE:false}
-    connect-timeout: \${AVIATIONSTACK_CONNECT_TIMEOUT:5s}
-    read-timeout: \${AVIATIONSTACK_READ_TIMEOUT:15s}
+    enabled: ${AVIATIONSTACK_ENABLED:true}
+    api-url: ${AVIATIONSTACK_API_URL:https://api.aviationstack.com/v1}
+    api-key: ${AVIATIONSTACK_API_KEY:}
+    include-flight-date: ${AVIATIONSTACK_INCLUDE_FLIGHT_DATE:false}
+    connect-timeout: ${AVIATIONSTACK_CONNECT_TIMEOUT:5s}
+    read-timeout: ${AVIATIONSTACK_READ_TIMEOUT:15s}
   ignav:
-    enabled: \${IGNAV_ENABLED:true}
-    api-url: \${IGNAV_API_URL:https://ignav.com/api}
-    api-key: \${IGNAV_API_KEY:}
-    market: \${IGNAV_MARKET:IN}
-    connect-timeout: \${IGNAV_CONNECT_TIMEOUT:5s}
-    read-timeout: \${IGNAV_READ_TIMEOUT:15s}
+    enabled: ${IGNAV_ENABLED:true}
+    api-url: ${IGNAV_API_URL:https://ignav.com/api}
+    api-key: ${IGNAV_API_KEY:}
+    market: ${IGNAV_MARKET:IN}
+    connect-timeout: ${IGNAV_CONNECT_TIMEOUT:5s}
+    read-timeout: ${IGNAV_READ_TIMEOUT:15s}
   tavily:
-    api-url: \${TAVILY_API_URL:https://api.tavily.com/search}
-    api-key: \${TAVILY_API_KEY:}
+    api-url: ${TAVILY_API_URL:https://api.tavily.com/search}
+    api-key: ${TAVILY_API_KEY:}
   weather:
-    provider: \${WEATHER_PROVIDER:openweather}
-    api-key: \${OPENWEATHER_API_KEY:}
-    geocode-url: \${OPENWEATHER_GEOCODE_URL:https://api.openweathermap.org/geo/1.0/direct}
-    current-url: \${OPENWEATHER_CURRENT_URL:https://api.openweathermap.org/data/2.5/weather}
-    forecast-url: \${OPENWEATHER_FORECAST_URL:https://api.openweathermap.org/data/2.5/forecast}
+    provider: ${WEATHER_PROVIDER:openweather}
+    api-key: ${OPENWEATHER_API_KEY:}
+    geocode-url: ${OPENWEATHER_GEOCODE_URL:https://api.openweathermap.org/geo/1.0/direct}
+    current-url: ${OPENWEATHER_CURRENT_URL:https://api.openweathermap.org/data/2.5/weather}
+    forecast-url: ${OPENWEATHER_FORECAST_URL:https://api.openweathermap.org/data/2.5/forecast}
   mcp:
     distributed-state:
-      enabled: \${MCP_DISTRIBUTED_STATE_ENABLED:false}
+      enabled: ${MCP_DISTRIBUTED_STATE_ENABLED:false}
       rate-limit:
-        enabled: \${MCP_DISTRIBUTED_RATE_LIMIT_ENABLED:false}
-        requests-per-window: \${MCP_DISTRIBUTED_RATE_LIMIT_REQUESTS:120}
-        window-seconds: \${MCP_DISTRIBUTED_RATE_LIMIT_WINDOW_SECONDS:60}
-    allowed-tools: \${MCP_ALLOWED_TOOLS:search_flights,search_hotels,get_weather,resolve_airport,search_travel_research,generate_itinerary}
+        enabled: ${MCP_DISTRIBUTED_RATE_LIMIT_ENABLED:false}
+        requests-per-window: ${MCP_DISTRIBUTED_RATE_LIMIT_REQUESTS:120}
+        window-seconds: ${MCP_DISTRIBUTED_RATE_LIMIT_WINDOW_SECONDS:60}
+    allowed-tools: ${MCP_ALLOWED_TOOLS:search_flights,search_hotels,get_weather,resolve_airport,search_travel_research,generate_itinerary}
     governance:
-      enabled: \${MCP_GOVERNANCE_ENABLED:true}
-      max-argument-bytes: \${MCP_MAX_ARGUMENT_BYTES:16384}
-      allowed-users: \${MCP_GOVERNANCE_ALLOWED_USERS:}
-      tools: \${MCP_GOVERNANCE_TOOLS:search_flights:READ_ONLY,search_hotels:READ_ONLY,get_weather:READ_ONLY,resolve_airport:READ_ONLY,search_travel_research:READ_ONLY,generate_itinerary:READ_ONLY}
-      approval-tools: \${MCP_GOVERNANCE_APPROVAL_TOOLS:}
-      roles: \${MCP_GOVERNANCE_ROLES:USER:READ_ONLY;ADMIN:READ_ONLY,SIDE_EFFECTING}
-      circuit-failure-threshold: \${MCP_GOVERNANCE_CIRCUIT_FAILURE_THRESHOLD:3}
-      circuit-open-ms: \${MCP_GOVERNANCE_CIRCUIT_OPEN_MS:30000}
+      enabled: ${MCP_GOVERNANCE_ENABLED:true}
+      max-argument-bytes: ${MCP_MAX_ARGUMENT_BYTES:16384}
+      allowed-users: ${MCP_GOVERNANCE_ALLOWED_USERS:}
+      tools: ${MCP_GOVERNANCE_TOOLS:search_flights:READ_ONLY,search_hotels:READ_ONLY,get_weather:READ_ONLY,resolve_airport:READ_ONLY,search_travel_research:READ_ONLY,generate_itinerary:READ_ONLY}
+      approval-tools: ${MCP_GOVERNANCE_APPROVAL_TOOLS:}
+      roles: ${MCP_GOVERNANCE_ROLES:USER:READ_ONLY;ADMIN:READ_ONLY,SIDE_EFFECTING}
+      circuit-failure-threshold: ${MCP_GOVERNANCE_CIRCUIT_FAILURE_THRESHOLD:3}
+      circuit-open-ms: ${MCP_GOVERNANCE_CIRCUIT_OPEN_MS:30000}
     security:
-      enabled: \${MCP_SECURITY_ENABLED:false}
-      api-key: \${MCP_API_KEY:}
+      enabled: ${MCP_SECURITY_ENABLED:false}
+      api-key: ${MCP_API_KEY:}
     provider:
-      connect-timeout: \${MCP_PROVIDER_CONNECT_TIMEOUT:5s}
-      read-timeout: \${MCP_PROVIDER_READ_TIMEOUT:15s}
+      connect-timeout: ${MCP_PROVIDER_CONNECT_TIMEOUT:5s}
+      read-timeout: ${MCP_PROVIDER_READ_TIMEOUT:15s}
   flights:
     strategy: FALLBACK
-    max-results: \${FLIGHT_MAX_RESULTS:10}
+    max-results: ${FLIGHT_MAX_RESULTS:10}
     circuit-breaker:
-      failure-threshold: \${FLIGHT_CB_FAILURE_THRESHOLD:3}
-      cooldown: \${FLIGHT_CB_COOLDOWN:60s}
+      failure-threshold: ${FLIGHT_CB_FAILURE_THRESHOLD:3}
+      cooldown: ${FLIGHT_CB_COOLDOWN:60s}
   serpapi:
-    enabled: \${SERPAPI_ENABLED:true}
-    api-url: \${SERPAPI_API_URL:https://serpapi.com/search}
-    api-key: \${SERPAPI_API_KEY:}
-    gl: \${SERPAPI_GL:in}
-    hl: \${SERPAPI_HL:en}
-    currency: \${SERPAPI_CURRENCY:INR}
-    max-results: \${SERPAPI_MAX_RESULTS:8}
-    connect-timeout: \${SERPAPI_CONNECT_TIMEOUT:5s}
-    read-timeout: \${SERPAPI_READ_TIMEOUT:15s}
+    enabled: ${SERPAPI_ENABLED:true}
+    api-url: ${SERPAPI_API_URL:https://serpapi.com/search}
+    api-key: ${SERPAPI_API_KEY:}
+    gl: ${SERPAPI_GL:in}
+    hl: ${SERPAPI_HL:en}
+    currency: ${SERPAPI_CURRENCY:INR}
+    max-results: ${SERPAPI_MAX_RESULTS:8}
+    connect-timeout: ${SERPAPI_CONNECT_TIMEOUT:5s}
+    read-timeout: ${SERPAPI_READ_TIMEOUT:15s}
   jettova:
-    enabled: \${JETTOVA_ENABLED:true}
-    api-url: \${JETTOVA_API_URL:https://www.jettova.com/api/v1}
-    api-key: \${JETTOVA_API_KEY:}
-    connect-timeout: \${JETTOVA_CONNECT_TIMEOUT:5s}
-    read-timeout: \${JETTOVA_READ_TIMEOUT:60s}
+    enabled: ${JETTOVA_ENABLED:true}
+    api-url: ${JETTOVA_API_URL:https://www.jettova.com/api/v1}
+    api-key: ${JETTOVA_API_KEY:}
+    connect-timeout: ${JETTOVA_CONNECT_TIMEOUT:5s}
+    read-timeout: ${JETTOVA_READ_TIMEOUT:60s}
   hotels:
     strategy: FALLBACK
-    max-results: \${HOTEL_MAX_RESULTS:8}
+    max-results: ${HOTEL_MAX_RESULTS:8}
     circuit-breaker:
-      failure-threshold: \${HOTEL_CB_FAILURE_THRESHOLD:3}
-      cooldown: \${HOTEL_CB_COOLDOWN:60s}
+      failure-threshold: ${HOTEL_CB_FAILURE_THRESHOLD:3}
+      cooldown: ${HOTEL_CB_COOLDOWN:60s}
