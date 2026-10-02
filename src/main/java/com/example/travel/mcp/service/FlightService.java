@@ -43,7 +43,7 @@ public class FlightService {
             return SearchFlightsResponse.failure("INVALID_DATE_RANGE", "returnDate cannot be before departureDate.");
         }
         return orchestrator.search(new SearchFlightsRequest(origin, destination,
-                trimToNull(request.departureDate()), trimToNull(request.returnDate()), request.normalizedPassengers()));
+                trimToNull(request.departureDate()), trimToNull(request.returnDate()), request.normalizedPassengers(), request.preferredProvider()));
     }
 
     private boolean iataCode(String value) { return value != null && value.trim().matches("[A-Za-z]{3}"); }
