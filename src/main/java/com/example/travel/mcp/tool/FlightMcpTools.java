@@ -29,13 +29,14 @@ public class FlightMcpTools {
             @McpToolParam(description = "Three-letter destination IATA code, for example BOM", required = true) String destination,
             @McpToolParam(description = "Departure date in yyyy-MM-dd format", required = false) String departureDate,
             @McpToolParam(description = "Return date in yyyy-MM-dd format, for trip context", required = false) String returnDate,
-            @McpToolParam(description = "Number of passengers, from 1 to 9", required = false) Integer passengers) {
+            @McpToolParam(description = "Number of passengers, from 1 to 9", required = false) Integer passengers,
+            @McpToolParam(description = "Optional preferred provider, e.g. IGNAV or AVIATIONSTACK. Server may fall back to other healthy enabled providers.", required = false) String preferredProvider) {
         governance.check("search_flights");
         long started = System.nanoTime();
-        log.info("mcp.tool.request name=search_flights origin={} destination={} departureDate={} returnDate={} passengers={}",
-            origin, destination, departureDate, returnDate, passengers);
+        log.info("mcp.tool.request name=search_flights origin={} destination={} departureDate={} returnDate={} passengers={} preferredProvider={}",
+            origin, destination, departureDate, returnDate, passengers, preferredProvider);
         log.info("mcp.tool.start name=search_flights origin={} destination={}", origin, destination);
-        SearchFlightsResponse response = flightService.search(new SearchFlightsRequest(origin, destination, departureDate, returnDate, passengers));
+        SearchFlightsResponse response = flightService.search(new SearchFlightsRequest(origin, destination, departureDate, returnDate, passengers, preferredProvider));
         log.info("mcp.tool.response name=search_flights response={}", response);
         log.info("mcp.tool.complete name=search_flights success={} results={} durationMs={}", response.success(), response.flights().size(), elapsedMs(started));
         return response;
