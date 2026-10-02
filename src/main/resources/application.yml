@@ -1,3 +1,17 @@
+spring:
+  datasource:
+    url: ${MCP_DB_URL:}
+    username: ${MCP_DB_USERNAME:}
+    password: ${MCP_DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${MCP_DB_POOL_MAX:8}
+      minimum-idle: ${MCP_DB_POOL_MIN:1}
+      connection-timeout: ${MCP_DB_CONNECTION_TIMEOUT_MS:3000}
+  flyway:
+    enabled: ${MCP_DISTRIBUTED_STATE_ENABLED:false}
+    baseline-on-migrate: true
+
 server:
   port: ${MCP_SERVER_PORT:8090}
 
@@ -42,6 +56,12 @@ travel:
     current-url: ${OPENWEATHER_CURRENT_URL:https://api.openweathermap.org/data/2.5/weather}
     forecast-url: ${OPENWEATHER_FORECAST_URL:https://api.openweathermap.org/data/2.5/forecast}
   mcp:
+    distributed-state:
+      enabled: ${MCP_DISTRIBUTED_STATE_ENABLED:false}
+      rate-limit:
+        enabled: ${MCP_DISTRIBUTED_RATE_LIMIT_ENABLED:false}
+        requests-per-window: ${MCP_DISTRIBUTED_RATE_LIMIT_REQUESTS:120}
+        window-seconds: ${MCP_DISTRIBUTED_RATE_LIMIT_WINDOW_SECONDS:60}
     allowed-tools: ${MCP_ALLOWED_TOOLS:search_flights,search_hotels,get_weather,resolve_airport,search_travel_research,generate_itinerary}
     governance:
       enabled: ${MCP_GOVERNANCE_ENABLED:true}
