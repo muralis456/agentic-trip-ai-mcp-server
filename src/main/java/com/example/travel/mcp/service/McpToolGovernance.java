@@ -41,6 +41,7 @@ public class McpToolGovernance {
     private final Map<String, AtomicInteger> failures = new ConcurrentHashMap<>();
     private final int circuitFailureThreshold;
     private final long circuitOpenMs;
+    private final McpDistributedStateStore distributedStateStore;
 
     public McpToolGovernance(
             @Value("${travel.mcp.governance.enabled:true}") boolean enabled,
@@ -50,7 +51,8 @@ public class McpToolGovernance {
             @Value("${travel.mcp.governance.approval-tools:}") String configuredApprovalTools,
             @Value("${travel.mcp.governance.roles:USER:READ_ONLY;ADMIN:READ_ONLY,SIDE_EFFECTING}") String configuredRoles,
             @Value("${travel.mcp.governance.circuit-failure-threshold:3}") int circuitFailureThreshold,
-            @Value("${travel.mcp.governance.circuit-open-ms:30000}") long circuitOpenMs) {
+            @Value("${travel.mcp.governance.circuit-open-ms:30000}") long circuitOpenMs,
+            org.springframework.beans.factory.ObjectProvider<McpDistributedStateStore> distributedStateStore) {
         this.enabled = enabled;
         this.maxArgumentBytes = Math.max(1024, maxArgumentBytes);
         this.allowedUsers = parseSet(configuredUsers);
@@ -59,6 +61,7 @@ public class McpToolGovernance {
         this.approvalTools = parseSet(configuredApprovalTools);
         this.circuitFailureThreshold = Math.max(1, circuitFailureThreshold);
         this.circuitOpenMs = Math.max(1000, circuitOpenMs);
+        this.distributedStateStore = distributedStateStore.getIfAvailable();
     }
 
     public void check(String toolName) {
