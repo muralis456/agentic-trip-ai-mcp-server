@@ -2,8 +2,9 @@ package com.example.travel.mcp.service;
 
 import com.example.travel.mcp.persistence.McpGovernanceStateEntity;
 import com.example.travel.mcp.persistence.McpGovernanceStateRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.example.travel.mcp.persistence.McpRateLimitBucketRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,22 +16,29 @@ import org.springframework.transaction.annotation.Transactional;
         havingValue = "true")
 public class JpaMcpDistributedStateStore implements McpDistributedStateStore {
 
+    private static final Logger log = LoggerFactory.getLogger(JpaMcpDistributedStateStore.class);
+
     private final McpGovernanceStateRepository governanceRepository;
+    private final McpRateLimitBucketRepository rateLimitRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    public JpaMcpDistributedStateStore(McpGovernanceStateRepository governanceRepository) {
+    public JpaMcpDistributedStateStore(
+            McpGovernanceStateRepository governanceRepository,
+            McpRateLimitBucketRepository rateLimitRepository) {
         this.governanceRepository = governanceRepository;
+        this.rateLimitRepository = rateLimitRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean isCircuitOpen(String toolName, long nowEpochMs) {
-        return governanceRepository.findById(toolName)
+        boolean open = governanceRepository.findById(toolName)
                 .map(state -> state.getCooldownUntilEpochMs() != null
                         && state.getCooldownUntilEpochMs() > nowEpochMs)
                 .orElse(false);
+
+        log.debug("MCP distributed circuit state checked tool={} open={} nowEpochMs={}",
+                toolName, open, nowEpochMs);
+        return open;
     }
 
     @Override
@@ -44,31 +52,18 @@ public class JpaMcpDistributedStateStore implements McpDistributedStateStore {
         state.setCooldownUntilEpochMs(null);
         state.setUpdatedAtEpochMs(now);
         governanceRepository.save(state);
+
+        log.info("MCP distributed circuit reset tool={} nowEpochMs={}", toolName, now);
     }
 
     @Override
     @Transactional
     public void recordFailure(String toolName, int failureThreshold,
                               long openMs, long nowEpochMs) {
-        entityManager.createNativeQuery("""
-                INSERT INTO mcp_governance_state(
-                    tool_name, failure_count, cooldown_until_epoch_ms, updated_at_epoch_ms)
-                VALUES (
-                    :toolName, 1, NULL, :nowEpochMs)
-                ON CONFLICT (tool_name) DO UPDATE
-                SET failure_count = mcp_governance_state.failure_count + 1,
-                    cooldown_until_epoch_ms = CASE
-                        WHEN mcp_governance_state.failure_count + 1 >= :failureThreshold
-                        THEN :nowEpochMs + :openMs
-                        ELSE mcp_governance_state.cooldown_until_epoch_ms
-                    END,
-                    updated_at_epoch_ms = :nowEpochMs
-                """)
-                .setParameter("toolName", toolName)
-                .setParameter("nowEpochMs", nowEpochMs)
-                .setParameter("failureThreshold", failureThreshold)
-                .setParameter("openMs", openMs)
-                .executeUpdate();
+        governanceRepository.recordFailure(toolName, failureThreshold, openMs, nowEpochMs);
+
+        log.warn("MCP distributed circuit failure recorded tool={} threshold={} openMs={} nowEpochMs={}",
+                toolName, failureThreshold, openMs, nowEpochMs);
     }
 
     @Override
@@ -76,34 +71,15 @@ public class JpaMcpDistributedStateStore implements McpDistributedStateStore {
     public boolean allowRequest(String bucketKey, int maxRequests,
                                 long windowMs, long nowEpochMs) {
         long windowStart = nowEpochMs - (nowEpochMs % windowMs);
+        Integer count = rateLimitRepository.incrementAndGetCount(
+                bucketKey, windowStart, nowEpochMs);
 
-        Object result = entityManager.createNativeQuery("""
-                WITH upsert AS (
-                    INSERT INTO mcp_rate_limit_bucket(
-                        bucket_key, window_start_epoch_ms, request_count, updated_at_epoch_ms)
-                    VALUES (:bucketKey, :windowStart, 1, :nowEpochMs)
-                    ON CONFLICT (bucket_key) DO UPDATE
-                    SET window_start_epoch_ms = CASE
-                            WHEN mcp_rate_limit_bucket.window_start_epoch_ms < :windowStart
-                            THEN EXCLUDED.window_start_epoch_ms
-                            ELSE mcp_rate_limit_bucket.window_start_epoch_ms
-                        END,
-                        request_count = CASE
-                            WHEN mcp_rate_limit_bucket.window_start_epoch_ms < :windowStart
-                            THEN 1
-                            ELSE mcp_rate_limit_bucket.request_count + 1
-                        END,
-                        updated_at_epoch_ms = EXCLUDED.updated_at_epoch_ms
-                    RETURNING request_count
-                )
-                SELECT request_count FROM upsert
-                """)
-                .setParameter("bucketKey", bucketKey)
-                .setParameter("windowStart", windowStart)
-                .setParameter("nowEpochMs", nowEpochMs)
-                .getSingleResult();
+        int requestCount = count == null ? 0 : count;
+        boolean allowed = requestCount <= maxRequests;
 
-        int count = ((Number) result).intValue();
-        return count <= maxRequests;
+        log.debug("MCP distributed rate limit checked bucket={} count={} maxRequests={} allowed={}",
+                bucketKey, requestCount, maxRequests, allowed);
+
+        return allowed;
     }
 }
