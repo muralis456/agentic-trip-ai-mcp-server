@@ -47,7 +47,7 @@ public class FlightSearchOrchestrator {
         List<String> providersUsed = new ArrayList<>();
         List<String> diagnostics = new ArrayList<>();
 
-        for (FlightProvider provider : providers) {
+        for (FlightProvider provider : orderedProviders(request.preferredProvider())) {
             if (!provider.enabled()) {
                 diagnostics.add(provider.name() + " disabled/unconfigured");
                 log.info("flight.provider.skip provider={} reason=disabled-or-unconfigured", provider.name());
@@ -102,6 +102,20 @@ public class FlightSearchOrchestrator {
 
         String message = diagnostics.isEmpty() ? "No enabled flight provider is available." : String.join("; ", diagnostics);
         return SearchFlightsResponse.failure("FLIGHT_PROVIDERS_UNAVAILABLE", message);
+    }
+
+    private List<FlightProvider> orderedProviders(String preferredProvider) {
+        if (preferredProvider == null || preferredProvider.isBlank()) return providers;
+        String preferred = preferredProvider.trim().toUpperCase(Locale.ROOT);
+        List<FlightProvider> ordered = new ArrayList<>();
+        providers.stream().filter(p -> p.name().equalsIgnoreCase(preferred)).findFirst().ifPresent(ordered::add);
+        providers.stream().filter(p -> !p.name().equalsIgnoreCase(preferred)).forEach(ordered::add);
+        if (ordered.isEmpty()) {
+            log.warn("flight.provider.preference-invalid preferredProvider={} configuredProviders={}",
+                    preferredProvider, providers.stream().map(FlightProvider::name).toList());
+            return providers;
+        }
+        return ordered;
     }
 
     private boolean isTransientFailure(SearchFlightsResponse response) {
