@@ -6,7 +6,8 @@ public record SearchFlightsRequest(
         String destination,
         String departureDate,
         String returnDate,
-        Integer passengers) {
+        Integer passengers,
+        String preferredProvider) {
 
     public int normalizedPassengers() {
         return passengers == null ? 1 : passengers;
