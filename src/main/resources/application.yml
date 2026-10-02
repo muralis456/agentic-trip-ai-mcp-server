@@ -9,7 +9,10 @@ spring:
       server:
         name: agentic-trip-ai-mcp-server
         version: 0.0.1
-        protocol: STREAMABLE
+        # Stateless MCP: no server-side MCP session state is kept between HTTP requests.
+        # Override with MCP_SERVER_PROTOCOL=STREAMABLE only when a stateful MCP session
+        # is explicitly required for a legacy integration.
+        protocol: ${MCP_SERVER_PROTOCOL:STATELESS}
         type: SYNC
         streamable-http:
           mcp-endpoint: /mcp
