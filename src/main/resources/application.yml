@@ -11,7 +11,7 @@ spring:
       minimum-idle: ${MCP_DB_POOL_MIN:1}
       connection-timeout: ${MCP_DB_CONNECTION_TIMEOUT_MS:3000}
   flyway:
-    enabled: ${MCP_DISTRIBUTED_STATE_ENABLED:false}
+    enabled: true
     baseline-on-migrate: true
   jpa:
     hibernate:
