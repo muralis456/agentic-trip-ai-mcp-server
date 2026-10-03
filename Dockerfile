@@ -24,9 +24,12 @@ WORKDIR /app
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 
 COPY --from=build /workspace/target/agentic-trip-ai-mcp-server-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY docker/entrypoint-vault.sh /app/entrypoint-vault.sh
+
+RUN chmod 755 /app/entrypoint-vault.sh
 
 EXPOSE 8090
 
 USER 10001:10001
 
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["/app/entrypoint-vault.sh"]
