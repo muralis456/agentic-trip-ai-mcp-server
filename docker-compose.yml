@@ -12,7 +12,6 @@ services:
     environment:
       POSTGRES_DB: travel_agent
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${MCP_DB_PASSWORD:-postgres}
     volumes:
       - mcp-postgres-data:/var/lib/postgresql/data
     healthcheck:
