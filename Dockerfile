@@ -14,6 +14,11 @@ COPY . .
 RUN mvn -B -DskipTests clean package
 
 FROM eclipse-temurin:26-jre
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends wget \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
