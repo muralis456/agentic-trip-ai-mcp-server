@@ -11,12 +11,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: travel_agent
-      POSTGRES_USER: travel_app
-      POSTGRES_PASSWORD: ${MCP_DB_PASSWORD:-travel_app_local}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MCP_DB_PASSWORD:-postgres}
     volumes:
       - mcp-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U travel_app -d travel_agent"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d travel_agent"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -41,7 +41,7 @@ services:
 
       MCP_SERVER_PORT: "8090"
       MCP_DB_URL: jdbc:postgresql://postgres:5432/travel_agent
-      MCP_DB_USERNAME: travel_app
+      MCP_DB_USERNAME: postgres
       MCP_SERVER_PROTOCOL: STATELESS
 
       MCP_SECURITY_ENABLED: ${MCP_SECURITY_ENABLED:-false}
