@@ -1,6 +1,6 @@
 spring:
   config:
-    import: vault:///agentic-trip-ai-mcp
+    import: vault://secret/agentic-trip-ai-mcp
 
   cloud:
     vault:
