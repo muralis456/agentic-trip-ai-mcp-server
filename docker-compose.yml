@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: travel_agent
       POSTGRES_USER: travel_app
       POSTGRES_PASSWORD: ${MCP_DB_PASSWORD:-travel_app_local}
-    ports:
-      - "5432:5432"
     volumes:
       - mcp-postgres-data:/var/lib/postgresql/data
     healthcheck:
