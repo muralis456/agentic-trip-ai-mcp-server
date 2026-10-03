@@ -1,0 +1,15 @@
+spring:
+  config:
+    import: vault:///agentic-trip-ai-mcp
+
+  cloud:
+    vault:
+      uri: ${VAULT_URI:http://host.docker.internal:8200}
+      authentication: APPROLE
+      fail-fast: true
+      app-role:
+        role-id: ${VAULT_ROLE_ID}
+        secret-id: ${VAULT_SECRET_ID}
+      kv:
+        backend: secret
+        backend-version: 2
