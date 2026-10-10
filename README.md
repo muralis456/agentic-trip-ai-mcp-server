@@ -106,3 +106,18 @@ Tool/provider integrations
 
 Any replica can process any MCP request.
 
+
+
+## Production profile: fail-closed security and shared governance
+
+Run with `SPRING_PROFILES_ACTIVE=prod` in production. This profile defaults to:
+
+- MCP API-key authentication enabled.
+- A non-empty `MCP_API_KEY` required at startup.
+- PostgreSQL-backed distributed governance state required at startup.
+- Distributed rate limiting enabled, so replicas share the same request counters.
+- The existing Flyway migrations create the shared governance tables.
+
+Configure `MCP_DB_URL`, `MCP_DB_USERNAME`, `MCP_DB_PASSWORD`, and a strong `MCP_API_KEY` through your secret manager. Do not commit secrets to source control.
+
+For local development, keep the default profile; it does not require production-only API-key configuration. If the production profile cannot initialize the shared state store or API-key protection, startup fails rather than silently falling back to per-instance state or running the MCP endpoint without authentication.
