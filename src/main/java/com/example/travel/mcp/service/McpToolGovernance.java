@@ -1,8 +1,9 @@
 package com.example.travel.mcp.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -43,6 +44,9 @@ public class McpToolGovernance {
     private final long circuitOpenMs;
     private final McpDistributedStateStore distributedStateStore;
 
+    @Value("${travel.mcp.distributed-state.require-shared-store:false}")
+    private boolean requireSharedStore;
+
     public McpToolGovernance(
             @Value("${travel.mcp.governance.enabled:true}") boolean enabled,
             @Value("${travel.mcp.governance.max-argument-bytes:16384}") int maxArgumentBytes,
@@ -62,6 +66,13 @@ public class McpToolGovernance {
         this.circuitFailureThreshold = Math.max(1, circuitFailureThreshold);
         this.circuitOpenMs = Math.max(1000, circuitOpenMs);
         this.distributedStateStore = distributedStateStore.getIfAvailable();
+    }
+
+    @PostConstruct
+    void validateDistributedStateRequirement() {
+        if (requireSharedStore && distributedStateStore == null) {
+            throw new IllegalStateException("Shared MCP governance state is required but no distributed state store is configured");
+        }
     }
 
     public void check(String toolName) {

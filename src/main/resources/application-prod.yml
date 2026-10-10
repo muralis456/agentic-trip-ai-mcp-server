@@ -1,0 +1,16 @@
+# Production defaults are intentionally fail-closed for transport security and
+# cross-replica governance. Activate with SPRING_PROFILES_ACTIVE=prod.
+# Local development keeps the more permissive application.yml defaults.
+travel:
+  mcp:
+    distributed-state:
+      enabled: ${MCP_DISTRIBUTED_STATE_ENABLED:true}
+      require-shared-store: ${MCP_DISTRIBUTED_STATE_REQUIRED:true}
+      rate-limit:
+        enabled: ${MCP_DISTRIBUTED_RATE_LIMIT_ENABLED:true}
+        requests-per-window: ${MCP_DISTRIBUTED_RATE_LIMIT_REQUESTS:120}
+        window-seconds: ${MCP_DISTRIBUTED_RATE_LIMIT_WINDOW_SECONDS:60}
+    security:
+      enabled: ${MCP_SECURITY_ENABLED:true}
+      require-api-key: ${MCP_SECURITY_REQUIRE_API_KEY:true}
+      api-key: ${MCP_API_KEY:}
