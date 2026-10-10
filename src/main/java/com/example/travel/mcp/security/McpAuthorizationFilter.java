@@ -1,6 +1,7 @@
 package com.example.travel.mcp.security;
 
 import com.example.travel.mcp.service.McpDistributedStateStore;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,9 @@ public class McpAuthorizationFilter extends OncePerRequestFilter {
     private final int requestsPerWindow;
     private final long windowMs;
     private final McpDistributedStateStore distributedStateStore;
+
+    @Value("${travel.mcp.security.require-api-key:false}")
+    private boolean requireApiKey;
     private final Map<String, LocalBucket> localBuckets = new ConcurrentHashMap<>();
 
     public McpAuthorizationFilter(
@@ -51,6 +55,14 @@ public class McpAuthorizationFilter extends OncePerRequestFilter {
         this.requestsPerWindow = Math.max(1, requestsPerWindow);
         this.windowMs = Math.max(1000, windowSeconds * 1000L);
         this.distributedStateStore = distributedStateStore.getIfAvailable();
+    }
+
+    @PostConstruct
+    void validateApiKeyConfiguration() {
+        if (requireApiKey && (!securityEnabled || expectedKey.isBlank())) {
+            throw new IllegalStateException(
+                    "Production MCP security requires MCP_SECURITY_ENABLED=true and a non-empty MCP_API_KEY");
+        }
     }
 
     @Override
