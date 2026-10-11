@@ -93,6 +93,7 @@ travel:
       failure-threshold: ${FLIGHT_CB_FAILURE_THRESHOLD:3}
       cooldown: ${FLIGHT_CB_COOLDOWN:60s}
   serpapi:
+    # Used as the third flight fallback after Ignav when enabled and API key is configured.
     enabled: ${SERPAPI_ENABLED:true}
     api-url: ${SERPAPI_API_URL:https://serpapi.com/search}
     api-key: ${SERPAPI_API_KEY:}
