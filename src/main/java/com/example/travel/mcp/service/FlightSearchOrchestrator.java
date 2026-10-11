@@ -103,7 +103,7 @@ public class FlightSearchOrchestrator {
         }
 
         if (!collected.isEmpty()) {
-            List<FlightResult> normalized = normalize(collected);
+            List<FlightResult> normalized = normalize(collected, request);
             String providerText = String.join(" + ", providersUsed);
             return SearchFlightsResponse.success(normalized,
                     "Flight search completed using " + providerText + ". " + String.join("; ", diagnostics));
