@@ -59,6 +59,49 @@ class FlightSearchOrchestratorTest {
     }
 
     @Test
+    void continuesFallbackWhenIgnavHasScheduleButNoFare() {
+        AtomicInteger ignavCalls = new AtomicInteger();
+        AtomicInteger serpCalls = new AtomicInteger();
+        FlightResult scheduleOnly = new FlightResult("AI101", "Air India", "BLR", "BOM",
+                DATE + "T09:00", DATE + "T11:00", "scheduled", "provider=Ignav; fare unavailable");
+        FlightResult priced = new FlightResult("6E201", "IndiGo", "BLR", "BOM",
+                DATE + "T10:00", DATE + "T12:00", "scheduled",
+                "provider=SerpApi Google Flights; price=6500; currency=INR");
+        FlightProvider ignav = provider("Ignav", ignavCalls,
+                SearchFlightsResponse.success(List.of(scheduleOnly), "schedule only"));
+        FlightProvider serp = provider("SerpApi Google Flights", serpCalls,
+                SearchFlightsResponse.success(List.of(priced), "fare available"));
+
+        SearchFlightsResponse response = orchestrator(List.of(ignav, serp))
+                .search(new SearchFlightsRequest("BLR", "BOM", DATE, null, 1, ""));
+
+        assertTrue(response.success());
+        assertEquals(1, ignavCalls.get());
+        assertEquals(1, serpCalls.get(), "SerpApi should be tried to find prices");
+        assertEquals("6E201", response.flights().getFirst().flightNumber());
+        assertTrue(response.message().contains("SerpApi Google Flights"));
+    }
+
+    @Test
+    void retainsValidScheduleOnlyResultsWhenNoAlternativeReturnsFare() {
+        AtomicInteger ignavCalls = new AtomicInteger();
+        AtomicInteger serpCalls = new AtomicInteger();
+        FlightResult scheduleOnly = new FlightResult("AI101", "Air India", "BLR", "BOM",
+                DATE + "T09:00", DATE + "T11:00", "scheduled", "provider=Ignav; fare unavailable");
+        FlightProvider ignav = provider("Ignav", ignavCalls,
+                SearchFlightsResponse.success(List.of(scheduleOnly), "schedule only"));
+        FlightProvider serp = provider("SerpApi Google Flights", serpCalls,
+                SearchFlightsResponse.failure("SERPAPI_CONFIGURATION", "not configured"));
+
+        SearchFlightsResponse response = orchestrator(List.of(ignav, serp))
+                .search(new SearchFlightsRequest("BLR", "BOM", DATE, null, 1, ""));
+
+        assertTrue(response.success());
+        assertEquals("AI101", response.flights().getFirst().flightNumber());
+        assertTrue(response.message().contains("schedule-only"));
+    }
+
+    @Test
     void rejectsResultsWithoutARequestedDateWhenDateWasSpecified() {
         AtomicInteger calls = new AtomicInteger();
         FlightProvider noDate = provider("Ignav", calls,
