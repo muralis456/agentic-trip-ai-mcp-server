@@ -136,9 +136,12 @@ public class SerpApiFlightProvider implements FlightProvider {
             String flightNumber = first.path("flight_number").asString("");
             String departure = first.path("departure_airport").path("time").asString("");
             String arrival = last.path("arrival_airport").path("time").asString("");
-            String price = itinerary.path("price").asString("");
+            String rawPrice = itinerary.path("price").asString("");
+            // The browser note parser treats commas as field separators; keep the numeric
+            // amount locale-neutral and put the currency in its own metadata field.
+            String price = rawPrice.replaceAll("[^0-9.]", "");
             String notes = "provider=SerpApi Google Flights"
-                    + (price.isBlank() ? "; fare unavailable" : "; price=" + price + " " + currency)
+                    + (price.isBlank() ? "; fare=unavailable" : "; price=" + price + "; currency=" + currency)
                     + "; fare is indicative and must be reconfirmed before booking";
             results.add(new FlightResult(flightNumber, airline, departureAirport, arrivalAirport,
                     departure, arrival, "scheduled", notes));
