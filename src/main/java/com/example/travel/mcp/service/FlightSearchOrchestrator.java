@@ -44,6 +44,8 @@ public class FlightSearchOrchestrator {
 
     public SearchFlightsResponse search(SearchFlightsRequest request) {
         List<FlightResult> collected = new ArrayList<>();
+        List<FlightResult> scheduleOnlyFallback = new ArrayList<>();
+        String scheduleOnlyProvider = "";
         List<String> providersUsed = new ArrayList<>();
         List<String> diagnostics = new ArrayList<>();
 
@@ -80,13 +82,26 @@ public class FlightSearchOrchestrator {
                 List<FlightResult> validFlights = normalize(response.flights(), request);
                 if (response.success() && !validFlights.isEmpty()) {
                     state.success();
-                    providersUsed.add(provider.name());
-                    collected.addAll(validFlights);
-                    diagnostics.add(provider.name() + " results=" + response.flights().size());
-                    log.info("flight.provider.success provider={} results={} durationMs={}", provider.name(), response.flights().size(), elapsedMs(started));
-
-                    // Once the primary fallback returns usable options, stop to keep the chain resilient and bounded.
-                    break;
+                    boolean hasPricedResult = validFlights.stream().anyMatch(flight -> Double.isFinite(priceOrInfinity(flight)));
+                    diagnostics.add(provider.name() + " results=" + validFlights.size()
+                            + (hasPricedResult ? " with fare data" : " schedule-only; trying next provider for fares"));
+                    log.info("flight.provider.success provider={} results={} hasFare={} durationMs={}",
+                            provider.name(), validFlights.size(), hasPricedResult, elapsedMs(started));
+                    if (hasPricedResult) {
+                        // Prefer a valid priced alternative over an earlier schedule-only result.
+                        collected.clear();
+                        collected.addAll(validFlights);
+                        providersUsed.clear();
+                        providersUsed.add(provider.name());
+                        break;
+                    }
+                    // Preserve a valid schedule as a last-resort result, but continue to
+                    // later providers that may return fare data for the same requested trip.
+                    if (scheduleOnlyFallback.isEmpty()) {
+                        scheduleOnlyFallback.addAll(validFlights);
+                        scheduleOnlyProvider = provider.name();
+                    }
+                    continue;
                 }
 
                 boolean countFailure = response.success() && response.flights() != null && !response.flights().isEmpty()
@@ -100,6 +115,12 @@ public class FlightSearchOrchestrator {
                 diagnostics.add(provider.name() + " exception=" + safeMessage(ex));
                 log.error("flight.provider.exception provider={} durationMs={} message={}", provider.name(), elapsedMs(started), safeMessage(ex), ex);
             }
+        }
+
+        if (collected.isEmpty() && !scheduleOnlyFallback.isEmpty()) {
+            collected.addAll(scheduleOnlyFallback);
+            providersUsed.add(scheduleOnlyProvider);
+            diagnostics.add("No configured fallback returned fare data; retaining the first valid schedule-only results");
         }
 
         if (!collected.isEmpty()) {
