@@ -84,7 +84,7 @@ public class FlightSearchOrchestrator {
                     diagnostics.add(provider.name() + " results=" + response.flights().size());
                     log.info("flight.provider.success provider={} results={} durationMs={}", provider.name(), response.flights().size(), elapsedMs(started));
 
-                    // Default strategy is resilient fallback, not a fan-out call. Stop after usable results.
+                    // Once the primary fallback returns usable options, stop to keep the chain resilient and bounded.
                     break;
                 }
 
