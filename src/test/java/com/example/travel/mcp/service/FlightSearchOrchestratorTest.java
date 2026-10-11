@@ -37,8 +37,7 @@ class FlightSearchOrchestratorTest {
         assertEquals(1, serpCalls.get(), "SerpApi should be tried after unusable Ignav data");
         assertEquals(1, response.flights().size());
         assertEquals("6E201", response.flights().getFirst().flightNumber());
-        assertEquals("SerpApi Google Flights", response.flights().getFirst().airline().isBlank()
-                ? "SerpApi Google Flights" : "SerpApi Google Flights");
+        assertTrue(response.message().contains("SerpApi Google Flights"));
     }
 
     @Test
