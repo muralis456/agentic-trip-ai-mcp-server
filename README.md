@@ -38,6 +38,20 @@ spring:
               endpoint: /mcp
 ```
 
+
+## Flight provider fallback
+
+Flight searches intentionally bypass AviationStack while its results are being validated. The orchestrator tries configured providers in order and continues when a provider is unavailable, returns an unusable route/date, or only returns schedule data without fares.
+
+Default fallback path:
+1. **Ignav** (`IGNAV_ENABLED=true`, `IGNAV_API_KEY=...`)
+2. **SerpApi Google Flights** (`SERPAPI_ENABLED=true`, `SERPAPI_API_KEY=...`) when Ignav has no usable priced results.
+3. Keep the first valid schedule-only results as a last resort if no configured provider returns fare data.
+
+The MCP service validates route and requested departure date before accepting results. If a user specifies a date, providers that cannot return a verifiable matching date are skipped rather than displaying unrelated flights. SerpApi fare results are indicative and should be confirmed with the provider before booking.
+
+Configure provider keys via your environment/secret manager; do not commit API keys to source control. The alternative API fallback is only available when its key is configured.
+
 ## Security
 
 The MCP endpoint is protected by the project's `X-MCP-API-KEY` filter when:
