@@ -48,6 +48,13 @@ public class FlightSearchOrchestrator {
         List<String> diagnostics = new ArrayList<>();
 
         for (FlightProvider provider : orderedProviders(request.preferredProvider())) {
+            // Temporarily bypass AviationStack until its schedule data is reliable.
+            // Continue through the ordered provider list to find usable results.
+            if ("aviationstack".equalsIgnoreCase(provider.name())) {
+                diagnostics.add(provider.name() + " skipped by configuration policy");
+                log.info("flight.provider.skip provider={} reason=temporarily-disabled", provider.name());
+                continue;
+            }
             if (!provider.enabled()) {
                 diagnostics.add(provider.name() + " disabled/unconfigured");
                 log.info("flight.provider.skip provider={} reason=disabled-or-unconfigured", provider.name());
