@@ -40,7 +40,9 @@ server:
 
 travel:
   aviation:
-    enabled: ${AVIATIONSTACK_ENABLED:true}
+    # Disabled by default: use Ignav as the primary flight provider and continue
+    # to configured alternative providers when it has no usable results.
+    enabled: ${AVIATIONSTACK_ENABLED:false}
     api-url: ${AVIATIONSTACK_API_URL:https://api.aviationstack.com/v1}
     api-key: ${AVIATIONSTACK_API_KEY:}
     include-flight-date: ${AVIATIONSTACK_INCLUDE_FLIGHT_DATE:false}
