@@ -138,6 +138,7 @@ public class FlightSearchOrchestrator {
     }
 
     private List<FlightResult> normalize(List<FlightResult> flights, SearchFlightsRequest request) {
+        if (flights == null || flights.isEmpty()) return List.of();
         Map<String, FlightResult> unique = new LinkedHashMap<>();
         for (FlightResult flight : flights) {
             if (flight == null || blank(flight.flightNumber()) || blank(flight.origin()) || blank(flight.destination())) continue;
@@ -148,8 +149,8 @@ public class FlightSearchOrchestrator {
                 continue;
             }
             String actualDate = departureDate(flight.departureScheduled());
-            if (!blank(request.departureDate()) && !blank(actualDate)
-                    && !request.departureDate().equals(actualDate)) {
+            if (!blank(request.departureDate())
+                    && (blank(actualDate) || !request.departureDate().equals(actualDate))) {
                 log.warn("flight.provider.result-discarded reason=date-mismatch requestedDate={} actualDate={} flight={}",
                         request.departureDate(), actualDate, flight.flightNumber());
                 continue;
