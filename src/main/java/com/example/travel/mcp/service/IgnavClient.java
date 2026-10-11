@@ -212,8 +212,15 @@ public class IgnavClient {
             String airline = nonBlank(outbound.path("carrier").asString(),
                     nonBlank(first.path("operating_carrier_name").asString(), "Unavailable"));
             String flightNumber = nonBlank(first.path("flight_number").asString(), "Unavailable");
-            String departureAirport = nonBlank(first.path("departure_airport").asString(), origin);
-            String arrivalAirport = nonBlank(last.path("arrival_airport").asString(), destination);
+            String departureAirport = nonBlank(first.path("departure_airport").asString(), "");
+            String arrivalAirport = nonBlank(last.path("arrival_airport").asString(), "");
+            if (departureAirport.isBlank() || arrivalAirport.isBlank()
+                    || !origin.equalsIgnoreCase(departureAirport)
+                    || !destination.equalsIgnoreCase(arrivalAirport)) {
+                log.warn("MCP search_flights provider=Ignav discarding itinerary with missing or mismatched route expected={}->{} actual={}->{}",
+                        origin, destination, departureAirport, arrivalAirport);
+                continue;
+            }
             String departure = nonBlank(first.path("departure_time_local").asString(),
                     first.path("departure_time_utc").asString());
             String arrival = nonBlank(last.path("arrival_time_local").asString(),
