@@ -77,10 +77,11 @@ public class FlightSearchOrchestrator {
                     continue;
                 }
 
-                if (response.success() && !response.flights().isEmpty()) {
+                List<FlightResult> validFlights = normalize(response.flights(), request);
+                if (response.success() && !validFlights.isEmpty()) {
                     state.success();
                     providersUsed.add(provider.name());
-                    collected.addAll(response.flights());
+                    collected.addAll(validFlights);
                     diagnostics.add(provider.name() + " results=" + response.flights().size());
                     log.info("flight.provider.success provider={} results={} durationMs={}", provider.name(), response.flights().size(), elapsedMs(started));
 
@@ -88,7 +89,8 @@ public class FlightSearchOrchestrator {
                     break;
                 }
 
-                boolean countFailure = isTransientFailure(response);
+                boolean countFailure = response.success() && response.flights() != null && !response.flights().isEmpty()
+                        ? true : isTransientFailure(response);
                 state.failure(countFailure);
                 diagnostics.add(provider.name() + " " + (response.success() ? "empty" : response.errorCode()));
                 log.warn("flight.provider.no-usable-results provider={} success={} code={} results={} circuitFailures={} durationMs={}",
@@ -135,10 +137,23 @@ public class FlightSearchOrchestrator {
         return true;
     }
 
-    private List<FlightResult> normalize(List<FlightResult> flights) {
+    private List<FlightResult> normalize(List<FlightResult> flights, SearchFlightsRequest request) {
         Map<String, FlightResult> unique = new LinkedHashMap<>();
         for (FlightResult flight : flights) {
             if (flight == null || blank(flight.flightNumber()) || blank(flight.origin()) || blank(flight.destination())) continue;
+            if (!request.origin().equalsIgnoreCase(flight.origin().trim())
+                    || !request.destination().equalsIgnoreCase(flight.destination().trim())) {
+                log.warn("flight.provider.result-discarded reason=route-mismatch expected={}->{} actual={}->{} providerFlight={}",
+                        request.origin(), request.destination(), flight.origin(), flight.destination(), flight.flightNumber());
+                continue;
+            }
+            String actualDate = departureDate(flight.departureScheduled());
+            if (!blank(request.departureDate()) && !blank(actualDate)
+                    && !request.departureDate().equals(actualDate)) {
+                log.warn("flight.provider.result-discarded reason=date-mismatch requestedDate={} actualDate={} flight={}",
+                        request.departureDate(), actualDate, flight.flightNumber());
+                continue;
+            }
             unique.putIfAbsent(dedupKey(flight), flight);
         }
         List<FlightResult> result = new ArrayList<>(unique.values());
@@ -146,6 +161,12 @@ public class FlightSearchOrchestrator {
                 .thenComparing(f -> nullToEmpty(f.airline()), String.CASE_INSENSITIVE_ORDER)
                 .thenComparing(f -> nullToEmpty(f.departureScheduled())));
         return result.size() <= maxResults ? result : new ArrayList<>(result.subList(0, maxResults));
+    }
+
+    private String departureDate(String departure) {
+        if (blank(departure)) return "";
+        Matcher matcher = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2})(?:[T\\s].*)?$").matcher(departure.trim());
+        return matcher.matches() ? matcher.group(1) : "";
     }
 
     private String dedupKey(FlightResult f) {
