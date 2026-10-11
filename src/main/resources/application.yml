@@ -40,8 +40,7 @@ server:
 
 travel:
   aviation:
-    # Disabled by default: use Ignav as the primary flight provider and continue
-    # to configured alternative providers when it has no usable results.
+    # Disabled during flight-data validation; orchestrator skips this provider in the chain.
     enabled: ${AVIATIONSTACK_ENABLED:false}
     api-url: ${AVIATIONSTACK_API_URL:https://api.aviationstack.com/v1}
     api-key: ${AVIATIONSTACK_API_KEY:}
