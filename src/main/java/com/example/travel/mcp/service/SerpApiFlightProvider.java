@@ -136,8 +136,10 @@ public class SerpApiFlightProvider implements FlightProvider {
             String flightNumber = first.path("flight_number").asString("");
             String departure = first.path("departure_airport").path("time").asString("");
             String arrival = last.path("arrival_airport").path("time").asString("");
-            String notes = "SerpApi Google Flights schedule; fare shown by provider: "
-                    + itinerary.path("price").asString("unavailable");
+            String price = itinerary.path("price").asString("");
+            String notes = "provider=SerpApi Google Flights"
+                    + (price.isBlank() ? "; fare unavailable" : "; price=" + price + " " + currency)
+                    + "; fare is indicative and must be reconfirmed before booking";
             results.add(new FlightResult(flightNumber, airline, departureAirport, arrivalAirport,
                     departure, arrival, "scheduled", notes));
         }
