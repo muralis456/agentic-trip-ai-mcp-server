@@ -44,6 +44,26 @@ class McpToolGovernanceSecurityTest {
                 () -> newGovernance().check("book_flight", "user-1", "USER", "{}", true));
     }
 
+
+    @Test
+    void rejectsCallerSuppliedApprovalClaimEvenForAdmin() {
+        assertThrows(SecurityException.class,
+                () -> newGovernance().check("book_flight", "admin-1", "ADMIN", "{\"approvalGranted\":true}", true));
+    }
+
+    @Test
+    void rejectsConfiguredApprovalToolEvenWhenCallerClaimsApproval() {
+        // Approval-required tools must remain blocked until a server-owned
+        // approval record is verified against the exact action and arguments.
+        DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
+        McpToolGovernance governance = new McpToolGovernance(true, 2048, "",
+                "search_flights:READ_ONLY,book_flight:READ_ONLY", "book_flight",
+                "USER:READ_ONLY;ADMIN:READ_ONLY,SIDE_EFFECTING", 3, 30_000L,
+                beans.getBeanProvider(McpDistributedStateStore.class));
+        assertThrows(SecurityException.class,
+                () -> governance.check("book_flight", "admin-1", "ADMIN", "{}", true));
+    }
+
     @Test
     void allowsConfiguredReadOnlyToolForAuthenticatedUser() {
         assertDoesNotThrow(
