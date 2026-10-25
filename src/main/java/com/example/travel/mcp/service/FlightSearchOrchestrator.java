@@ -50,13 +50,6 @@ public class FlightSearchOrchestrator {
         List<String> diagnostics = new ArrayList<>();
 
         for (FlightProvider provider : orderedProviders(request.preferredProvider())) {
-            // Temporarily bypass AviationStack until its schedule data is reliable.
-            // Continue through the ordered provider list to find usable results.
-            if ("aviationstack".equalsIgnoreCase(provider.name())) {
-                diagnostics.add(provider.name() + " skipped by configuration policy");
-                log.info("flight.provider.skip provider={} reason=temporarily-disabled", provider.name());
-                continue;
-            }
             if (!provider.enabled()) {
                 diagnostics.add(provider.name() + " disabled/unconfigured");
                 log.info("flight.provider.skip provider={} reason=disabled-or-unconfigured", provider.name());
@@ -71,7 +64,8 @@ public class FlightSearchOrchestrator {
 
             long started = System.nanoTime();
             try {
-                log.info("flight.provider.start provider={} origin={} destination={}", provider.name(), request.origin(), request.destination());
+                log.info("flight.provider.start provider={} origin={} destination={}",
+                        provider.name(), request.origin(), request.destination());
                 SearchFlightsResponse response = provider.search(request);
                 if (response == null) {
                     state.failure(true);
@@ -109,11 +103,14 @@ public class FlightSearchOrchestrator {
                 state.failure(countFailure);
                 diagnostics.add(provider.name() + " " + (response.success() ? "empty" : response.errorCode()));
                 log.warn("flight.provider.no-usable-results provider={} success={} code={} results={} circuitFailures={} durationMs={}",
-                        provider.name(), response.success(), response.errorCode(), response.flights().size(), state.failures(), elapsedMs(started));
+                        provider.name(), response.success(), response.errorCode(),
+                        response.flights() == null ? 0 : response.flights().size(),
+                        state.failures(), elapsedMs(started));
             } catch (RuntimeException ex) {
                 state.failure(true);
                 diagnostics.add(provider.name() + " exception=" + safeMessage(ex));
-                log.error("flight.provider.exception provider={} durationMs={} message={}", provider.name(), elapsedMs(started), safeMessage(ex), ex);
+                log.error("flight.provider.exception provider={} durationMs={} message={}",
+                        provider.name(), elapsedMs(started), safeMessage(ex), ex);
             }
         }
 
