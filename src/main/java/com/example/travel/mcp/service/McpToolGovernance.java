@@ -152,10 +152,16 @@ public class McpToolGovernance {
 
         boolean requiresApproval = actionClass == ActionClass.SIDE_EFFECTING
                 || approvalTools.contains(normalizedTool);
-        if (requiresApproval && !approvalGranted) {
-            log.warn("mcp.policy tool={} userId={} role={} action={} decision=APPROVAL_REQUIRED",
+        if (requiresApproval) {
+            // A boolean supplied by a caller is only a claim, not proof of a
+            // human decision. Until a server-owned approval record/token is
+            // bound to (user, tool, arguments, and run), fail closed even when
+            // approvalGranted=true. The transport-only overload above already
+            // follows this rule.
+            log.warn("mcp.policy tool={} userId={} role={} action={} decision=SERVER_APPROVAL_REQUIRED",
                     normalizedTool, normalizedUser, normalizedRole, actionClass);
-            throw new SecurityException("Human approval is required before executing MCP tool: " + normalizedTool);
+            throw new SecurityException(
+                    "Server-verified human approval is required before executing MCP tool: " + normalizedTool);
         }
 
         log.info("mcp.policy tool={} userId={} role={} action={} decision=ALLOW",
