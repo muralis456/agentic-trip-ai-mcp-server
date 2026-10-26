@@ -40,4 +40,35 @@ class TravelMcpToolsValidationTest {
                 () -> tools.getWeather("Tokyo", "25-12-2026", null));
         verifyNoInteractions(services, governance);
     }
+
+    @Test
+    void rejectsWeatherEndDateBeforeStartDate() {
+        assertThrows(IllegalArgumentException.class,
+                () -> tools.getWeather("Tokyo", "2026-12-10", "2026-12-09"));
+        verifyNoInteractions(services, governance);
+    }
+
+    @Test
+    void rejectsHotelCheckoutBeforeCheckin() {
+        assertThrows(IllegalArgumentException.class,
+                () -> tools.searchHotels("Tokyo", "balanced", false,
+                        "2026-12-10", "2026-12-09", 2, 0, null));
+        verifyNoInteractions(services, governance);
+    }
+
+    @Test
+    void rejectsOverlongResearchQueryBeforeServiceInvocation() {
+        assertThrows(IllegalArgumentException.class,
+                () -> tools.searchTravelResearch("x".repeat(501)));
+        verifyNoInteractions(services, governance);
+    }
+
+    @Test
+    void rejectsNonPositiveHotelPriceLimit() {
+        assertThrows(IllegalArgumentException.class,
+                () -> tools.searchHotels("Tokyo", "balanced", false,
+                        "2026-12-10", "2026-12-12", 2, 0,
+                        java.math.BigDecimal.ZERO));
+        verifyNoInteractions(services, governance);
+    }
 }
