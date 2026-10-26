@@ -1,7 +1,6 @@
 package com.example.travel.mcp.service;
 
 import com.example.travel.mcp.dto.AirportResult;
-import com.example.travel.mcp.dto.HotelResult;
 import com.example.travel.mcp.dto.ResearchHit;
 import com.example.travel.mcp.dto.ResearchResult;
 import com.example.travel.mcp.dto.SearchHotelsResponse;
@@ -149,16 +148,37 @@ public class TravelMcpServices {
                     + (providerMessage.isBlank() ? "" : ": " + providerMessage);
             log.warn("mcp.provider.weather failed destination={} status={} reason={} response={}",
                     destination, exception.getStatusCode().value(), reason, sanitizeProviderResponse(responseBody));
-            return WeatherResult.failure(destination, reason);
+            return WeatherResult.failure(destination,
+                    "OpenWeather request failed (HTTP " + exception.getStatusCode().value() + ").");
         } catch (Exception exception) {
             log.warn("mcp.provider.weather failed destination={} exceptionType={} error={}",
                     destination, exception.getClass().getName(), exception.getMessage(), exception);
-            String message = exception.getMessage();
-            String reason = message == null || message.isBlank()
-                    ? "OpenWeather lookup failed: " + exception.getClass().getSimpleName()
-                    : "OpenWeather lookup failed: " + message;
-            return WeatherResult.failure(destination, reason);
+            return WeatherResult.failure(destination, "OpenWeather lookup failed.");
         }
+    }
+
+    private String extractProviderMessage(String responseBody) {
+        if (responseBody == null || responseBody.isBlank()) {
+            return "";
+        }
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            String message = root.path("message").asString("");
+            if (!message.isBlank()) {
+                return message;
+            }
+            return root.path("error").asString("");
+        } catch (Exception ignored) {
+            return responseBody.trim();
+        }
+    }
+
+    private String sanitizeProviderResponse(String responseBody) {
+        if (responseBody == null) {
+            return "";
+        }
+        String value = responseBody.replaceAll("[\\r\\n\\t]", " ").trim();
+        return value.length() > 500 ? value.substring(0, 500) : value;
     }
 
     private List<WeatherResult.DailyWeather> aggregateDailyForecast(JsonNode forecastRoot, LocalDate from, LocalDate to) {
@@ -240,31 +260,6 @@ public class TravelMcpServices {
         int hours = absolute / 3600;
         int minutes = (absolute % 3600) / 60;
         return String.format(Locale.ROOT, "UTC%s%02d:%02d", sign > 0 ? "+" : "-", hours, minutes);
-    }
-
-
-    private String extractProviderMessage(String responseBody) {
-        if (responseBody == null || responseBody.isBlank()) {
-            return "";
-        }
-        try {
-            JsonNode root = objectMapper.readTree(responseBody);
-            String message = root.path("message").asString("");
-            if (!message.isBlank()) {
-                return message;
-            }
-            return root.path("error").asString("");
-        } catch (Exception ignored) {
-            return responseBody.trim();
-        }
-    }
-
-    private String sanitizeProviderResponse(String responseBody) {
-        if (responseBody == null) {
-            return "";
-        }
-        String value = responseBody.replaceAll("[\\r\\n\\t]", " ").trim();
-        return value.length() > 500 ? value.substring(0, 500) : value;
     }
 
     private JsonNode firstData(JsonNode root) {
