@@ -59,9 +59,11 @@ public class TravelMcpTools {
         int childCount = children == null ? 0 : children;
         log.info("mcp.tool.request name=search_hotels destination={} travelStyle={} cheaper={} checkIn={} checkOut={} adults={} children={} maxPricePerNight={}",
                 destination, travelStyle, cheaper, checkIn, checkOut, adultCount, childCount, maxPricePerNight);
+        log.info("mcp.tool.start name=search_hotels");
         SearchHotelsResponse response = services.searchHotels(destination, travelStyle == null ? "balanced" : travelStyle,
                 Boolean.TRUE.equals(cheaper), checkIn, checkOut, adultCount, childCount, maxPricePerNight);
-        log.info("mcp.tool.response name=search_hotels success={} results={} message={}", response.success(), response.hotels().size(), response.message());
+        log.info("mcp.tool.response name=search_hotels success={} results={} message={}",
+                response.success(), response.hotels().size(), response.message());
         log.info("mcp.tool.complete name=search_hotels success={} results={} durationMs={}", response.success(), response.hotels().size(), elapsedMs(started));
         return response;
     }
@@ -96,6 +98,7 @@ public class TravelMcpTools {
         int adultCount = adults == null ? 2 : adults;
         log.info("mcp.tool.request name=generate_itinerary destination={} days={} startDate={} endDate={} adults={} style={}",
                 destination, dayCount, start, end, adultCount, travelStyle);
+        log.info("mcp.tool.start name=generate_itinerary");
         var response = services.generateItinerary(destination, dayCount, start, end, adultCount,
                 travelStyle == null ? "balanced" : travelStyle,
                 Boolean.TRUE.equals(foodExperience), Boolean.TRUE.equals(localExperience),
@@ -120,7 +123,9 @@ public class TravelMcpTools {
         }
         governance.check("get_weather");
         long started = System.nanoTime();
-        log.info("mcp.tool.request name=get_weather destination={} startDate={} endDate={}", destination, start, end);
+        log.info("mcp.tool.request name=get_weather destination={} startDate={} endDate={}",
+                destination, start, end);
+        log.info("mcp.tool.start name=get_weather");
         WeatherResult response = services.weather(destination, start, end);
         log.info("mcp.tool.response name=get_weather response={}", response);
         log.info("mcp.tool.complete name=get_weather success={} durationMs={}", response.success(), elapsedMs(started));
@@ -137,7 +142,7 @@ public class TravelMcpTools {
         log.info("mcp.tool.start name=resolve_airport query={}", cityOrCode);
         AirportResult response = services.resolveAirport(cityOrCode);
         log.info("mcp.tool.response name=resolve_airport response={}", response);
-        log.info("mcp.tool.complete name=resolve_airport success={} iata={} durationMs={}",
+        log.info("mcp.tool.complete name=resolve_airport success={} durationMs={}",
             response.success(), response.iata(), elapsedMs(started));
         return response;
     }
@@ -149,7 +154,8 @@ public class TravelMcpTools {
         governance.check("search_travel_research");
         long started = System.nanoTime();
         log.info("mcp.tool.request name=search_travel_research query={}", query);
-        log.info("mcp.tool.start name=search_travel_research queryLength={}", query == null ? 0 : query.length());
+        log.info("mcp.tool.start name=search_travel_research queryLength={}",
+                query == null ? 0 : query.length());
         ResearchResult response = services.research(query);
         log.info("mcp.tool.response name=search_travel_research response={}", response);
         log.info("mcp.tool.complete name=search_travel_research success={} results={} durationMs={}",

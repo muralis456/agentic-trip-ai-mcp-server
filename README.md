@@ -1,6 +1,6 @@
 # AgenticTripAI MCP Server
 
-Spring AI 2.0.1 / Spring Boot 4.1.1 MCP server for the AgenticTripAI platform.
+Spring AI 2.0.2 / Spring Boot 4.1.1 MCP server for the AgenticTripAI platform.
 
 ## MCP transport
 
@@ -41,12 +41,10 @@ spring:
 
 ## Flight provider fallback
 
-Flight searches intentionally bypass AviationStack while its results are being validated. The orchestrator tries configured providers in order and continues when a provider is unavailable, returns an unusable route/date, or only returns schedule data without fares.
+Flight searches use the configured enabled providers in order and continue when a provider is unavailable, returns an unusable route/date, or only returns schedule data without fares. AviationStack is disabled by default; set `AVIATIONSTACK_ENABLED=true` and configure its API key to include it.
 
 Default fallback path:
-1. **Ignav** (`IGNAV_ENABLED=true`, `IGNAV_API_KEY=...`)
-2. **SerpApi Google Flights** (`SERPAPI_ENABLED=true`, `SERPAPI_API_KEY=...`) when Ignav has no usable priced results.
-3. Keep the first valid schedule-only results as a last resort if no configured provider returns fare data.
+Providers are tried in Spring's configured order. The default configuration enables Ignav and SerpApi when their keys are configured, while AviationStack remains opt-in. The orchestrator prefers the first usable priced result and keeps a valid schedule-only result as a last resort if no enabled provider returns fare data.
 
 The MCP service validates route and requested departure date before accepting results. If a user specifies a date, providers that cannot return a verifiable matching date are skipped rather than displaying unrelated flights. SerpApi fare results are indicative and should be confirmed with the provider before booking.
 

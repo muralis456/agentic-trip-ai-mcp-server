@@ -16,12 +16,12 @@ class FlightSearchOrchestratorTest {
     private static final String DATE = "2026-10-11";
 
     @Test
-    void skipsAviationStackAndUsesSerpApiWhenIgnavReturnsWrongRoute() {
+    void skipsDisabledAviationStackAndUsesSerpApiWhenIgnavReturnsWrongRoute() {
         AtomicInteger aviationCalls = new AtomicInteger();
         AtomicInteger ignavCalls = new AtomicInteger();
         AtomicInteger serpCalls = new AtomicInteger();
 
-        FlightProvider aviation = provider("AviationStack", aviationCalls,
+        FlightProvider aviation = provider("AviationStack", false, aviationCalls,
                 SearchFlightsResponse.success(List.of(flight("JL999", "BLR", "BOM", DATE)), "bad provider"));
         FlightProvider ignav = provider("Ignav", ignavCalls,
                 SearchFlightsResponse.success(List.of(flight("AI101", "DEL", "BOM", DATE)), "wrong route"));
@@ -38,6 +38,28 @@ class FlightSearchOrchestratorTest {
         assertEquals(1, response.flights().size());
         assertEquals("6E201", response.flights().getFirst().flightNumber());
         assertTrue(response.message().contains("SerpApi Google Flights"));
+    }
+
+    @Test
+    void usesAviationStackWhenEnabled() {
+        AtomicInteger aviationCalls = new AtomicInteger();
+        AtomicInteger ignavCalls = new AtomicInteger();
+        FlightResult pricedFlight = new FlightResult("JL999", "Japan Airlines", "BLR", "BOM",
+                DATE + "T09:00", DATE + "T11:00", "scheduled",
+                "provider=AviationStack; price=1200; currency=INR");
+        FlightProvider aviation = provider("AviationStack", aviationCalls,
+                SearchFlightsResponse.success(List.of(pricedFlight), "configured provider"));
+        FlightProvider ignav = provider("Ignav", ignavCalls,
+                SearchFlightsResponse.success(List.of(flight("AI101", "BLR", "BOM", DATE)), "fallback"));
+
+        SearchFlightsResponse response = orchestrator(List.of(aviation, ignav))
+                .search(new SearchFlightsRequest("BLR", "BOM", DATE, null, 1, ""));
+
+        assertTrue(response.success());
+        assertEquals(1, aviationCalls.get());
+        assertEquals(0, ignavCalls.get());
+        assertEquals("JL999", response.flights().getFirst().flightNumber());
+        assertTrue(response.message().contains("AviationStack"));
     }
 
     @Test
@@ -119,9 +141,13 @@ class FlightSearchOrchestratorTest {
     }
 
     private FlightProvider provider(String name, AtomicInteger calls, SearchFlightsResponse response) {
+        return provider(name, true, calls, response);
+    }
+
+    private FlightProvider provider(String name, boolean enabled, AtomicInteger calls, SearchFlightsResponse response) {
         return new FlightProvider() {
             @Override public String name() { return name; }
-            @Override public boolean enabled() { return true; }
+            @Override public boolean enabled() { return enabled; }
             @Override public SearchFlightsResponse search(SearchFlightsRequest request) {
                 calls.incrementAndGet();
                 return response;
